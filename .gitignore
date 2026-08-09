@@ -1,0 +1,31 @@
+# Secrets
+.env
+
+# Local agent config
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Supabase CLI local state
+supabase/.temp/
+
+# Model weights and extracted frames — large and regenerable
+frames/
+models/
+*.pt
+*.gguf
+*.safetensors
+
+# Pipeline outputs — regenerable from the frames
+vlm_results.jsonl
+srt_results.json
+candidates.json
+
+# Benchmark frames are large. labels.json and benchmark/results/ are hand-made
+# and irreplaceable, so they are deliberately NOT ignored.
+benchmark/labelled/**/*.jpg
+benchmark/labelled/**/*.png
