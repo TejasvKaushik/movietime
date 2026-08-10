@@ -1,6 +1,9 @@
 # Secrets
 .env
 
+# Spec — kept local
+PROJECT.md
+
 # Local agent config
 .claude/settings.local.json
 

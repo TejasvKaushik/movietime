@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cinema Time</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+  }
+
+  #still {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;   /* mobile browsers shrink the viewport when the URL bar hides */
+    object-fit: cover;
+  }
+
+  #info {
+    position: fixed;
+    bottom: 24px;
+    right: 28px;
+    text-align: right;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+    font: 14px/1.6 system-ui, -apple-system, sans-serif;
+  }
+
+  #info h1 {
+    font: normal 21px/1.3 Georgia, serif;
+    margin-bottom: 3px;
+  }
+
+  #info a {
+    color: #fff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.45);
+  }
+
+  #info a + a { margin-left: 14px; }
+</style>
+</head>
+<body>
+
+<img id="still" alt="">
+<div id="info"></div>
+
+<script>
+const FN = "https://cdutvgabjrwjdohxsntz.supabase.co/functions/v1/get-still";
+
+// toTimeString() is always "HH:MM:SS GMT+…" in local time, 24-hour, zero-padded,
+// regardless of locale. toLocaleTimeString() is not — it can return 12-hour with AM/PM.
+const localHHMM = () => new Date().toTimeString().slice(0, 5);
+
+function render(still) {
+  const img = document.getElementById("still");
+  img.src = still.src;
+  img.alt = still.film_timestamp
+    ? `${still.title} at ${still.film_timestamp}`
+    : still.title;
+
+  const info = document.getElementById("info");
+
+  const title = document.createElement("h1");
+  title.textContent = still.year ? `${still.title} (${still.year})` : still.title;
+  info.append(title);
+
+  const meta = [still.director && `dir. ${still.director}`, still.film_timestamp]
+    .filter(Boolean)
+    .join("  ·  ");
+  if (meta) {
+    const line = document.createElement("p");
+    line.textContent = meta;
+    info.append(line);
+  }
+
+  const links = document.createElement("p");
+  for (const [label, href] of [["IMDb", still.imdb], ["Letterboxd", still.letterboxd]]) {
+    if (!href) continue;
+    const a = document.createElement("a");
+    a.textContent = label;
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener";
+    links.append(a);
+  }
+  if (links.children.length) info.append(links);
+}
+
+fetch(`${FN}?time=${localHHMM()}`)
+  .then(async (res) => {
+    if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+    return res.json();
+  })
+  .then(render)
+  // Spec allows no visible error UI, so a failure stays a black screen. Console only.
+  .catch((e) => console.error("cinema time:", e));
+</script>
+
+</body>
+</html>
