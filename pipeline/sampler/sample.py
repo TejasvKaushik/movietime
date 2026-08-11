@@ -55,10 +55,18 @@ def hhmmss(seconds):
     return f"{seconds // 3600:02d}:{seconds % 3600 // 60:02d}:{seconds % 60:02d}"
 
 
-def sample(video, out_root, fps=1.0, width=640, quality=5, force=False):
-    """Extract frames at `fps` into out_root/<slug>/, returning the manifest path."""
+def slugify(name):
+    return re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+
+
+def sample(video, out_root, fps=1.0, width=640, quality=5, force=False, slug=None):
+    """Extract frames at `fps` into out_root/<slug>/, returning the manifest path.
+
+    Release filenames rarely make usable slugs, so `slug` overrides the derived
+    one — the slug becomes the film's identity downstream in candidates.json.
+    """
     video = Path(video)
-    slug = re.sub(r"[^a-z0-9]+", "_", video.stem.lower()).strip("_")
+    slug = slugify(slug or video.stem)
     out_dir = Path(out_root) / slug
     manifest_path = out_dir / "manifest.json"
 
@@ -95,7 +103,9 @@ def sample(video, out_root, fps=1.0, width=640, quality=5, force=False):
         if match:
             timecodes.append(float(match[1]))
             if len(timecodes) % 500 == 0:
-                print(f"  {len(timecodes)} frames  ({timecodes[-1]:.0f}s)")
+                # flush: stdout is block-buffered when piped, so a long run
+                # would otherwise show no progress at all until it finished.
+                print(f"  {len(timecodes)} frames  ({timecodes[-1]:.0f}s)", flush=True)
     if process.wait() != 0:
         sys.exit(f"ffmpeg failed on {video}")
 
@@ -158,10 +168,11 @@ def main():
     parser.add_argument("--out", default="frames")
     parser.add_argument("--quality", type=int, default=5, help="ffmpeg -q:v, 2=best 31=worst")
     parser.add_argument("--force", action="store_true")
+    parser.add_argument("--slug", help="film identity downstream; defaults to the filename")
     args = parser.parse_args()
 
     require_ffmpeg()
-    sample(args.video, args.out, args.fps, args.width, args.quality, args.force)
+    sample(args.video, args.out, args.fps, args.width, args.quality, args.force, args.slug)
 
 
 if __name__ == "__main__":
