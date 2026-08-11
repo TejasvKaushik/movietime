@@ -30,5 +30,10 @@ candidates.json
 
 # Benchmark frames are large. labels.json and benchmark/results/ are hand-made
 # and irreplaceable, so they are deliberately NOT ignored.
-benchmark/labelled/**/*.jpg
-benchmark/labelled/**/*.png
+# Leading **/ matters: a pattern containing a slash is anchored to the repo
+# root, which would miss pipeline/benchmark/labelled/ entirely.
+**/benchmark/labelled/**/*.jpg
+**/benchmark/labelled/**/*.png
+
+# Synthetic clock faces are regenerated deterministically by make_clock_set.py.
+**/benchmark/clock_set/
